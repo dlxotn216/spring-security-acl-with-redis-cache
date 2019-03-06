@@ -238,7 +238,7 @@ Jedis의 버전이 낮아 지원하지 않는 것으로 파악하였는데 Sprin
 <a href="https://github.com/lettuce-io/lettuce-core/issues/146">Lettuce의 Github</a>에서 2015년 10월 경 FLUSHALL ASYNC에   
 대한 지원이 적용된 이슈를 확인했다.   
 또한 반영된 커밋에서 flushallAsync 메소드가 인터페이스에 선언 된 것을 확인했다.  
-<img src="" />
+<img src="https://raw.githubusercontent.com/dlxotn216/spring-security-acl-with-redis-cache/master/images/flushallasync.png" />
 
 Maven repository에서 Lettuce redis client를 찾았는데 3.x, 4.x, 5.x의 group id가 다 달랐다.  
 일단 Lettuce의 최신 버전인 lettuce-core 5.0.1을 적용해보았으나 역시나 제대로 동작하지 않았다.  
@@ -248,7 +248,7 @@ Maven repository에서 Lettuce redis client를 찾았는데 3.x, 4.x, 5.x의 gro
 있는 것인가이다. <a href="https://github.com/lettuce-io/lettuce-core/tree/3.5.x">3.5.x 브랜치</a>를 통해 하나하나 소스파일을 찾아보려 했으나 너무 비효율적이었다.  
 
 다행히도 <a href="https://lettuce.io/lettuce-3/release/api/">Letucce 3.x에 대한 Javasoc</a>을 찾았고 index 탭에서 flushallAsync 메소드를 찾았다.  
-<img src="" />
+<img src="https://raw.githubusercontent.com/dlxotn216/spring-security-acl-with-redis-cache/master/images/flushallasyncInJavaDoc.png" />
 따라서 com.labmdaworks의 Lettuce-core 3.5.0.final을 pom.xml에 추가하였다  
 
 이것에 맞추어 Spring Data Redis의 버전도 바꾸기로 했다. <a href="https://docs.spring.io/spring-data-redis/docs/current/reference/html/#new-in-1.7.0">Spring Data Redis docs</a>의 릴리즈 노트를 보면  
@@ -289,7 +289,7 @@ Maven repository에서 Lettuce redis client를 찾았는데 3.x, 4.x, 5.x의 gro
 
 정상적으로 Spring이 뜨고 Application이 구동되었으니 이제 RedisCallback 부분에서 flushallAsync 메소드를 이용하면 된다.  
 하지만 역시나 문제가 생겼다. 바로 flushallAsync 메소드가 안보인다...  
-<img src="" />
+<img src="https://raw.githubusercontent.com/dlxotn216/spring-security-acl-with-redis-cache/master/images/whereisflushallasync.png" />
 
 다시 Javadoc을 보면 RedisConnection 인터페이스의 flushallAsync 메소드는 RedisServerConnection 인터페이스로부터  
 상속 된 것이라고 나와잇다.  
@@ -307,7 +307,7 @@ shutdown, slaveof, slaveofNoOne, slowlogGet, slowlogGet, slowlogLen, slowlogRese
 그렇다면 여기서 필요로하는  com.lambdaworks.redis.RedisConnection 인터페이스 타입의 커넥션은 어떻게 가져올까?  
 정답은 생각보다 간단했다. org.springframework.data.redis.connection.RedisConnection의 getNativeConnection() 메소드를  
 호출하면 된다. 아래와 같이 디버거를 통해서도 확인하면 RedisAsyncConnectionImpl 타입인것을 확인할 수 있다.    
-<img src="" />
+<img src="https://raw.githubusercontent.com/dlxotn216/spring-security-acl-with-redis-cache/master/images/getNativeConnection.png" />
 
 최종적인 구현은 아래와 같다. 혹시 모를 형 변환오류에 대비하여 instanceof를 통해 타입 비교를 하였고  
 예외의 상황을 대비하여 flushallAsync 메소드 호출이 불가능하다면 flushAll 메소드를 통해 예외의 상황에서도  
